@@ -31,29 +31,18 @@
 	/**@}*/
 
 
-	//Definir liste
-	typedef struct Elt{
-			struct process *ID;
-			struct Elt *suivant;
-	} Element;
 
 	//Definir structure sempahore
 	typedef struct Sem{
-		int x;
+		int val;
 		struct process *tabWait[64];
+		unsigned  key;
 	} Semaphore;
 
 	/* Forward definitions. */
-	extern int sys_semget(unsigned);
-	extern int sys_semctl(int, int, int);
-	extern int sys_semop(int, int);
-
-	extern void addp(struct Sem,struct process);
-	extern void removep(struct Sem);
-
-
-
-//ajouter un element en fin de liste
+	extern int semget(unsigned);
+	extern int semctl(int, int, int);
+	extern int semop(int, int);
 
 
 

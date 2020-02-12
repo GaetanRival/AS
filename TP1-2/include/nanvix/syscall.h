@@ -267,11 +267,11 @@
 
 	/////////////////////////////
 
-	EXTERN int sys_semget(void);
+	EXTERN int sys_semget(unsigned);
 
-	EXTERN int sys_semctl(void);
+	EXTERN int sys_semctl(int,int,int);
 
-	EXTERN int sys_semop(void);
+	EXTERN int sys_semop(int,int);
 
 #endif /* _ASM_FILE_ */
 
