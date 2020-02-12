@@ -42,7 +42,12 @@ void down(Semaphore *sem){
 void up(Semaphore *sem){
   if(sem->val==0){
     if(sem->tabWait[0]!=NULL){
-      wakeup(sem->tabWait);
+			sem->tabTmp[0]=sem->tabWait[0]; //Selectionne le premier processus à reveiller
+			for(int y=0;y<63;y++){	//Decalage et mettre à jour le tableau des processus en attente
+				sem->tabWait[y]=sem->tabWait[y+1];
+			}
+			sem->tabWait[63]=NULL;
+      wakeup(sem->tabTmp);	// Reveille l'unique processus selectionné
     }
     else{
       sem->val++;
@@ -75,9 +80,7 @@ int sys_semget(unsigned key){
 		}
 		return ID;
 	}
-	else{
-		return -1;
-	}
+	return -1;
 }
 
 int sys_semctl(int semid, int cmd, int val){

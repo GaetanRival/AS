@@ -37,6 +37,7 @@
 		int val;
 		struct process *tabWait[64];
 		unsigned  key;
+		struct process *tabTmp[1]; 	//variable pour garder en memoire l'unique processus à reveiller
 	} Semaphore;
 
 	/* Forward definitions. */
