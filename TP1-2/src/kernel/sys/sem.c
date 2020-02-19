@@ -6,8 +6,9 @@
 #include <unistd.h>
 #include <nanvix/syscall.h>
 
+#define TAILLETAB 64 //Constante longueur tableau
 
-Semaphore tabSem[64]; //Fixe la taille du tableau de sempahore à 64
+Semaphore tabSem[TAILLETAB]; //Fixe la taille du tableau de sempahore à 64
 
 unsigned int curkey=1;
 
@@ -17,7 +18,7 @@ Semaphore* create (int n){
 	while(tabSem[i].key!=0){
 		i++;
 	}
-	if(i<64){
+	if(i<TAILLETAB){
 		tabSem[i].key=curkey;
 		tabSem[i].val=n;
 		curkey++;
@@ -43,10 +44,10 @@ void up(Semaphore *sem){
   if(sem->val==0){
     if(sem->tabWait[0]!=NULL){
 			sem->tabTmp[0]=sem->tabWait[0]; //Selectionne le premier processus à reveiller
-			for(int y=0;y<63;y++){	//Decalage et mettre à jour le tableau des processus en attente
+			for(int y=0;y<TAILLETAB-1;y++){	//Decalage et mettre à jour le tableau des processus en attente
 				sem->tabWait[y]=sem->tabWait[y+1];
 			}
-			sem->tabWait[63]=NULL;
+			sem->tabWait[TAILLETAB-1]=NULL;
       wakeup(sem->tabTmp);	// Reveille l'unique processus selectionné
     }
     else{
@@ -57,7 +58,7 @@ void up(Semaphore *sem){
 }
 
 void destroy(Semaphore *sem){
-  for(int i=0;i<64;i++){
+  for(int i=0;i<TAILLETAB;i++){
     sem->tabWait[i]=NULL;
   }
 	sem->key=0;
@@ -65,13 +66,13 @@ void destroy(Semaphore *sem){
 
 int sys_semget(unsigned key){
   int i=0;
-  while(i<64){
+  while(i<TAILLETAB){
     if(tabSem[i].key==key){
     	return i;
     }
 		i++;
   }
-	if(i>=64){
+	if(i>=TAILLETAB){
 		Semaphore* sem= create(1);
 		sem->key=key;
 		int ID=0;

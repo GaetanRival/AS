@@ -500,6 +500,150 @@ int semaphore_test3(void)
 	return (0);
 }
 
+int semaphore_test4(void)
+{
+	pid_t pid;                  /* Process ID.              */
+	int buffer_fd;              /* Buffer file descriptor.  */
+	int empty;                  /* Empty positions.         */
+	int full;                   /* Full positions.          */
+	int mutex;                  /* Mutex.                   */
+	int empty1;                  /* Empty positions.         */
+	int full1;                   /* Full positions.          */
+	int mutex1;                  /* Mutex.                   */
+	int empty2;                  /* Empty positions.         */
+	int full2;                   /* Full positions.          */
+	int mutex2;                  /* Mutex.                   */
+	const int BUFFER_SIZE = 32; /* Buffer size.             */
+	const int NR_ITEMS = 512;   /* Number of items to send. */
+
+	/* Create buffer.*/
+	buffer_fd = open("buffer", O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+	if (buffer_fd < 0)
+		return (-1);
+
+	/* Create semaphores. */
+	SEM_CREATE(mutex, 1);
+	SEM_CREATE(empty, 2);
+	SEM_CREATE(full, 3);
+
+	SEM_CREATE(mutex1, 4);
+	SEM_CREATE(empty1, 5);
+	SEM_CREATE(full1, 6);
+
+	SEM_CREATE(mutex2, 7);
+	SEM_CREATE(empty2, 8);
+	SEM_CREATE(full2, 9);
+
+	/* Initialize semaphores. */
+	SEM_INIT(full, 0);
+	SEM_INIT(empty, BUFFER_SIZE);
+	SEM_INIT(mutex, 1);
+
+	SEM_INIT(full1, 0);
+	SEM_INIT(empty1, BUFFER_SIZE);
+	SEM_INIT(mutex1, 1);
+
+	SEM_INIT(full2, 0);
+	SEM_INIT(empty2, BUFFER_SIZE);
+	SEM_INIT(mutex2, 1);
+
+	if ((pid = fork()) < 0)
+		return (-1);
+
+	/* Producer. */
+	else if (pid == 0)
+	{
+		for (int item = 0; item < NR_ITEMS; item++)
+		{
+
+			SEM_DOWN(empty);
+			SEM_DOWN(mutex);
+
+			PUT_ITEM(buffer_fd, item);
+
+			SEM_UP(mutex);
+			SEM_UP(full);
+
+		//	------------------------------------------------------
+
+			SEM_DOWN(empty1);
+			SEM_DOWN(mutex1);
+
+			PUT_ITEM(buffer_fd, item);
+
+			SEM_UP(mutex1);
+			SEM_UP(full1);
+
+			// ------------------------------------------------------
+
+			SEM_DOWN(empty2);
+			SEM_DOWN(mutex2);
+
+			PUT_ITEM(buffer_fd, item);
+
+			SEM_UP(mutex2);
+			SEM_UP(full2);
+		}
+
+		_exit(EXIT_SUCCESS);
+	}
+
+	/* Consumer. */
+	else
+	{
+		int item;
+
+		do
+		{
+			SEM_DOWN(full);
+			SEM_DOWN(mutex);
+
+			GET_ITEM(buffer_fd, item);
+
+			SEM_UP(mutex);
+			SEM_UP(empty);
+
+			//	------------------------------------------------------
+
+			SEM_DOWN(full1);
+			SEM_DOWN(mutex1);
+
+			GET_ITEM(buffer_fd, item);
+
+			SEM_UP(mutex1);
+			SEM_UP(empty1);
+
+			//	------------------------------------------------------
+
+			SEM_DOWN(full2);
+			SEM_DOWN(mutex2);
+
+			GET_ITEM(buffer_fd, item);
+
+			SEM_UP(mutex2);
+			SEM_UP(empty2);
+		} while (item != (NR_ITEMS - 1));
+	}
+
+	/* Destroy semaphores. */
+	SEM_DESTROY(mutex);
+	SEM_DESTROY(empty);
+	SEM_DESTROY(full);
+
+	SEM_DESTROY(mutex1);
+	SEM_DESTROY(empty1);
+	SEM_DESTROY(full1);
+
+	SEM_DESTROY(mutex2);
+	SEM_DESTROY(empty2);
+	SEM_DESTROY(full2);
+
+	close(buffer_fd);
+	unlink("buffer");
+
+	return (0);
+}
+
 /*============================================================================*
  *                                FPU test                                    *
  *============================================================================*/
@@ -659,8 +803,10 @@ int main(int argc, char **argv)
 		else if (!strcmp(argv[i], "ipc"))
 		{
 			printf("Interprocess Communication Tests\n");
-			printf("  producer consumer [%s]\n",
-				(!semaphore_test3()) ? "PASSED" : "FAILED");
+			//printf("  producer consumer [%s]\n",
+				//(!semaphore_test3()) ? "PASSED" : "FAILED");
+			printf("  producer consumer 2 [%s]\n",
+				(!semaphore_test4()) ? "PASSED" : "FAILED");
 		}
 
 		/* FPU test. */
